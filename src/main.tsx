@@ -1,0 +1,13 @@
+import {StrictMode,useEffect,useState} from 'react';
+import {createRoot} from 'react-dom/client';
+import {Fish,LayoutDashboard,UserRound,Tablet,Download,RotateCcw} from 'lucide-react';
+import {useStore} from './domain/useStore';
+import {seed} from './domain/model';
+import {Admin} from './views/Admin';
+import {EmployeeView} from './views/Employee';
+import {Kiosk} from './views/Kiosk';
+import './styles.css';
+type View='admin'|'empleado'|'checador';
+function route():View {const v=location.hash.slice(1);return v==='empleado'||v==='checador'?v:'admin';}
+function App(){const {store,save,warning}=useStore();const [view,setView]=useState<View>(route);const [employeeId,setEmployeeId]=useState('RP-001');const [simulation,setSimulation]=useState(false);useEffect(()=>{const handler=()=>setView(route());addEventListener('hashchange',handler);return()=>removeEventListener('hashchange',handler);},[]);function exportData(){const url=URL.createObjectURL(new Blob([JSON.stringify(store,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='rey-pez-datos-ficticios.json';a.click();URL.revokeObjectURL(url);}return <><div className="demo-banner"><strong>DEMOSTRACIÓN</strong><span>Datos ficticios · Roles simulados · Sin conexión a producción</span></div><header><a className="brand" href="#admin"><div className="brand-icon"><Fish/></div><div>REY PEZ<small>Laboratorio de operación</small></div></a><nav aria-label="Vistas de demostración" className="view-nav">{([{id:'admin',label:'Administrador',icon:LayoutDashboard},{id:'empleado',label:'Empleado',icon:UserRound},{id:'checador',label:'Checador',icon:Tablet}] as const).map(({id,label,icon:Icon})=><a href={`#${id}`} className={view===id?'active':''} key={id}><Icon size={17}/>{label}</a>)}</nav><span className="prototype">PROTOTIPO v0.1</span></header>{warning&&<div role="alert" className="storage-warning">{warning}</div>}{view==='admin'?<Admin store={store} save={save}/>:view==='empleado'?<EmployeeView store={store} id={employeeId} setId={setEmployeeId}/>:<Kiosk store={store} save={save}/>}<footer><div><span className={`dot ${simulation?'amber':''}`}/>{simulation?'Escenario sin conexión · simulado':'Escenario conectado · simulado'}<button className="link" onClick={()=>setSimulation(!simulation)}>Cambiar escenario</button></div><div><button onClick={exportData}><Download size={15}/>Exportar datos demo</button><button onClick={()=>{if(confirm('¿Restablecer los datos ficticios de este prototipo? Se perderán las ediciones locales.'))save(seed());}}><RotateCcw size={15}/>Restablecer demo</button></div></footer></>}
+createRoot(document.getElementById('root')!).render(<StrictMode><App/></StrictMode>);
